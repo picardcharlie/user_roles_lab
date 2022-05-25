@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, session, redirect, url_fo
 from app.forms import SignUpForm, SignInForm
 from app.models import User, db
 from flask_login import current_user, login_required, login_user, logout_user
+from app.email import send_mail
+# def send_mail(to, subject, template, **kwargs):
 
 auth = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -9,9 +11,11 @@ auth = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     signupform = SignUpForm()
     if signupform.validate_on_submit():
-        register_user = User(signupform.username.data, signupform.password.data)
+        register_user = User(username=signupform.username.data, user_email=signupform.user_email.data, password=signupform.password.data)
         db.session.add(register_user)
         db.session.commit()
+        send_mail(register_user.user_email, "welcome", "mail/welcome", user=register_user)
+        send_mail("su4440500@gmail.com", "new user joined", "mail/new_user", user=register_user)
         return redirect(url_for("main.index"))
     return render_template("/auth/register.html", signupform = signupform)
 
@@ -34,6 +38,20 @@ def login():
         else:
             flash("username not found.")
     return render_template("/auth/login.html", signinform=signinform)
+
+@auth.route("/confirm/<token>")
+@login_required
+def confirm(token):
+    if current_user.confirmed:
+        flash("User pre-confirmed")
+        return redirect(url_for("main.index"))
+    if current_user.confirm(token):
+        db.session.commit()
+        flash("Thank you for confirming your account")
+    else:
+        flash("Confirmation link expired or invalid.")
+    return redirect(url_for("main.index"))
+
 
 @auth.route("/logout")
 def logout():

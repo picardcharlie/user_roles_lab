@@ -1,0 +1,6 @@
+Welcome to ZOMBO {{ user.username }}!
+Please enjoy your stay here and allow a new world of possibilities
+to overcome you.  Anything is possible at ZOMBO.COM
+
+Thank you for joining us,
+The ZOMBO.COM warlords

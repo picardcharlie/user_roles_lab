@@ -17,7 +17,7 @@ class Config():
     #local mail settings
     ZOMBO_ADMIN = os.environ.get("ZOMBO_ADMIN")
     ZOMBO_MAIL_SUBJECT_PREFIX = "ZOMBO - "
-    ZOMBO_MAIL_SENDER = f"ZOMBO admin <{ZOMBO_ADMIN}>"
+    ZOMBO_MAIL_SENDER = f"ZOMBO admin {ZOMBO_ADMIN}"
 
     @staticmethod
     def init_app(app):

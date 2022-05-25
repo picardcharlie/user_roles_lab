@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block page_content %}
+{{ wtf.quick_form(signinform) }}
+{% for msg in get_flashed_messages() %}
+    <p> {{ msg }}</p>
+{% endfor %}
+{% endblock page_content %}

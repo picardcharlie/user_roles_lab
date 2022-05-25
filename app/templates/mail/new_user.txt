@@ -1,0 +1,4 @@
+A new victim has joined.
+User {{ user.username }} has joined the ranks.
+
+INITIATE PROJECT WATER CAR

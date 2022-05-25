@@ -9,6 +9,7 @@ class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     username = db.Column(db.String(64), unique = True, index = True)
+    user_email = db.Column(db.String(64), unique = True, index = True)
     password_hash = db.Column(db.String(128))
 
     @property
@@ -22,8 +23,9 @@ class User(UserMixin, db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def __init__(self, username, password):
+    def __init__(self, username, user_email, password):
         self.username = username
+        self.user_email = user_email
         self.password = password
 
 @login_manager.user_loader
