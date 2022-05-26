@@ -14,7 +14,9 @@ def register():
         register_user = User(username=signupform.username.data, user_email=signupform.user_email.data, password=signupform.password.data)
         db.session.add(register_user)
         db.session.commit()
+        generate_token = register_user.generate_confirmation_token()
         send_mail(register_user.user_email, "welcome", "mail/welcome", user=register_user)
+        send_mail(register_user.user_email, "confirm", "auth/mail/confirm", user=register_user, token=generate_token)
         send_mail("su4440500@gmail.com", "new user joined", "mail/new_user", user=register_user)
         return redirect(url_for("main.index"))
     return render_template("/auth/register.html", signupform = signupform)
@@ -39,6 +41,7 @@ def login():
             flash("username not found.")
     return render_template("/auth/login.html", signinform=signinform)
 
+#accepts a link with a token and attempts to confirm the user.  Redirects after.
 @auth.route("/confirm/<token>")
 @login_required
 def confirm(token):
