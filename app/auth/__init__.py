@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
 from app.forms import SignUpForm, SignInForm
-from app.models import User, db
+from app.models import User, db, load_user
 from flask_login import current_user, login_required, login_user, logout_user
 from app.email import send_mail
+
 # def send_mail(to, subject, template, **kwargs):
 
 auth = Blueprint('auth', __name__, url_prefix='/auth')
@@ -20,6 +21,12 @@ def register():
         send_mail("su4440500@gmail.com", "new user joined", "mail/new_user", user=register_user)
         return redirect(url_for("main.index"))
     return render_template("/auth/register.html", signupform = signupform)
+
+@auth.route("/resend_confirm")
+def resend_confirm():
+    new_token = current_user.generate_confirmation_token()
+    send_mail(current_user.user_email, "confirm", "auth/mail/confirm", user=current_user, token=new_token)
+    return redirect(url_for("main.index"))
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():
@@ -54,6 +61,24 @@ def confirm(token):
     else:
         flash("Confirmation link expired or invalid.")
     return redirect(url_for("main.index"))
+
+@auth.before_app_request
+def before_request():
+    #checks if current user is logged in
+    # if they have done their confirmation email
+    # blocks everything except for auth routes so they can still confirm their account
+    if current_user.is_authenticated \
+        and not current_user.confirmed \
+        and request != "static" \
+        and request.blueprint != "auth" \
+        and request.endpoint != "static":
+        return redirect(url_for("auth.unconfirmed"))
+
+@auth.route("/unconfirmed")
+def unconfirmed():
+    if current_user.is_anonymous or current_user.confirmed:
+        return redirect(url_for("main.index"))
+    return render_template("auth/unconfirmed.html", user=current_user)
 
 
 @auth.route("/logout")

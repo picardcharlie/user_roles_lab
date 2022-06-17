@@ -6,6 +6,7 @@ class Config():
     SECRET_KEY = "hello_world"
     SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "test.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    #SERVER_NAME = "http://localhost:5000/"
 
     #flask-mail settings
     MAIL_SERVER = "smtp.gmail.com"
