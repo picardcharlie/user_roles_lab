@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from . import login_manager
-#from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 import jwt
 from datetime import datetime, timedelta
 
@@ -57,6 +56,15 @@ class User(UserMixin, db.Model):
         self.user_email = user_email
         self.password = password
         self.confirmed = confirmed
+
+class Role(db.Model):
+    __tablename__ = "roles"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
+    default = db.Column(db.Boolean, default=False, index=True)
+    permissions = db.Column(db.Integer)
+    users = db.relationship("User", backref="role", lazy="dynamic")
+
 
 @login_manager.user_loader
 def load_user(uid):
