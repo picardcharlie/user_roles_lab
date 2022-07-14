@@ -3,8 +3,9 @@ from app.forms import SignUpForm, SignInForm
 from app.models import User, db, load_user
 from flask_login import current_user, login_required, login_user, logout_user
 from app.email import send_mail
+from ..decorators import admin_required, permission_required
+from ..models import Permission
 
-# def send_mail(to, subject, template, **kwargs):
 
 auth = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -90,3 +91,15 @@ def logout():
 @login_required
 def secret():
     return render_template("/auth/secret.html")
+
+@auth.route("/admin")
+@login_required
+@admin_required
+def admin_only():
+    return "Hello admin(istrator)"
+
+@auth.route("/moderator")
+@login_required
+@permission_required(Permission.MODERATE)
+def moderator_only():
+    return "take control moderator"

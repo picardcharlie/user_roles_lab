@@ -1,7 +1,7 @@
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+from flask_login import UserMixin, AnonymousUserMixin
 from . import login_manager
 import jwt
 from datetime import datetime, timedelta
@@ -15,6 +15,13 @@ class User(UserMixin, db.Model):
     user_email = db.Column(db.String(64), unique = True, index = True)
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default = False)
+    role = db.Column(db.Integer, db.ForeignKey("roles.id"))
+
+    def can(self, perm):
+        return self.role is not None and self.role.has_permission(perm)
+
+    def is_admin(self, perm):
+        return self.can(Permission.ADMIN)
 
     @property
     def password(self):
@@ -51,11 +58,27 @@ class User(UserMixin, db.Model):
         # ...
         data = jwt.decode(token, current_app.secret_key, algorithms=["HS512"])
 
-    def __init__(self, username, user_email, password, confirmed):
+    def __init__(self, username, user_email, password, confirmed, **kwargs):
         self.username = username
         self.user_email = user_email
         self.password = password
         self.confirmed = confirmed
+        super().__init__(**kwargs)
+        if self.role is None:
+            if self.user_email == current_app.config["ZOMBO_ADMIN"]:
+                self.role = Role.query.filter_by(name = "Admin").first()
+            if self.role is None:
+                self.role = Role.query.filter_by(default = True).first()
+
+class AnonymousUser(AnonymousUserMixin):
+    def can(self, perm):
+        return False
+
+    def is_admin(self):
+        return False
+
+login_manager.anonymous_user = AnonymousUser
+
 
 class Role(db.Model):
     __tablename__ = "roles"
@@ -63,7 +86,65 @@ class Role(db.Model):
     name = db.Column(db.String(64), unique=True)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer)
-    users = db.relationship("User", backref="role", lazy="dynamic")
+    users = db.relationship("User", backref="roles", lazy="dynamic")
+
+    @staticmethod
+    def insert_roles():
+        roles = {
+            'User': [Permission.FOLLOW,
+                     Permission.REVIEW,
+                     Permission.PUBLISH],
+            'Moderator': [Permission.FOLLOW,
+                          Permission.REVIEW,
+                          Permission.PUBLISH,
+                          Permission.MODERATE],
+            'Admin': [Permission.FOLLOW,
+                      Permission.REVIEW,
+                      Permission.PUBLISH,
+                      Permission.MODERATE,
+                      Permission.ADMIN],
+        }
+        default_role = 'User'
+        for r in roles:
+            # see if role is already in table
+            role = Role.query.filter_by(name=r).first()
+            if role is None:
+                # it's not so make a new one
+                role = Role(name=r)
+            role.reset_permissions()
+            # add whichever permissions the role needs
+            for perm in roles[r]:
+                role.add_permission(perm)
+            # if role is the default one, default is True
+            role.default = (role.name == default_role)
+            db.session.add(role)
+        db.session.commit()
+
+    def add_permission(self, perm):
+        if not self.has_permission(perm):
+            self.permissions += perm
+
+    def remove_permission(self, perm):
+        if self.has_permission(perm):
+            self.permissions -= perm
+
+    def reset_permission(self):
+        self.permissions = 0
+
+    def has_permission(self, perm):
+        return self.permissions & perm == perm
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.permissions is None:
+            self.permissions = 0
+
+class Permission:
+    FOLLOW = 0
+    REVIEW = 2
+    PUBLISH = 4
+    MODERATE = 8
+    ADMIN = 16
 
 
 @login_manager.user_loader
