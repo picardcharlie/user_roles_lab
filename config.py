@@ -24,4 +24,8 @@ class Config():
     def init_app(app):
         pass
 
-config = {'default': Config}
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_TESTING_URI") or "sqlite:///" + os.path.join(basedir, "data-test.sqlite")
+
+config = {"default": Config, "testing": TestingConfig}

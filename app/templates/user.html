@@ -1,10 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %} {{ super() }} User {{user_name}} {% endblock title %}
 
-</body>
-</html>
+{% block navbar %}
+{{ super() }}
+{% endblock navbar %}
+
+{% block page_content %}
+{{ super() }}
+<div class="page-header">
+    <h1>{{ user.username }}</h1>
+    <table class="table">
+        <tbody>
+        <tr>
+        <th scope="row">Name</th>
+        <td>{% if user.name %}{{ user.name }}{% endif %}</td>
+        </tr>
+        <tr>
+        <th scope="row">Location</th>
+        <td>{% if user.location %}{{ user.location }}{% endif %}</td>
+        </tr>
+        {% if current_user.is_admin() %}
+            <tr>
+            <th scope="row">Email</th>
+            <td><a href="mailto:{{ user.email }}">{{ user.email }}</a></td>
+            </tr>
+        {% elif current_user.can(Permission.PUBLISH) %}
+        <p> you can published </p>
+
+
+        {% endif %}
+        <tr>
+        <th scope="row">Bio</th>
+        <td>{% if user.bio %}{{ user.bio }}{% endif %}</td>
+        </tr>
+        <tr>
+        <th scope="row">Last seen</th>
+        <td>{{ moment(user.last_seen).fromNow() }}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

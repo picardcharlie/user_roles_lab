@@ -1,4 +1,10 @@
 {% extends "bootstrap/base.html" %}
+
+{% block scripts %}
+{{ super() }}
+{{ moment.include_moment() }}
+{% endblock scripts %}
+
 {% block title %}{{ super() }} {% endblock title %}
 
 {% block content %}

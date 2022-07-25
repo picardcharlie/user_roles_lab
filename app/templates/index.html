@@ -4,6 +4,7 @@
 <h1>WELCOME TO ZOMBO.COM</h1>
 <p><h1>Hello, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}person{% endif %}!</h1></p>
 {% if current_user.is_authenticated == True %}
+<p><a href={{ url_for("main.user", username = current_user.username) }}>profile</a></p>
 <p><a href={{ url_for("auth.logout") }}>logout</a></p>
 {% else %}
 <p><a href={{ url_for("auth.login") }}>login</a></p>

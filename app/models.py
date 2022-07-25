@@ -15,13 +15,23 @@ class User(UserMixin, db.Model):
     user_email = db.Column(db.String(64), unique = True, index = True)
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default = False)
-    role = db.Column(db.Integer, db.ForeignKey("roles.id"))
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"))
+    name = db.Column(db.String(64))
+    location = db.Column(db.String(64))
+    bio = db.Column(db.Text())
+    last_seen = db.Column(db.DateTime(), default = datetime.utcnow)
+
 
     def can(self, perm):
-        return self.role is not None and self.role.has_permission(perm)
+        return self.role_id is not None and self.role.has_permission(perm)
 
-    def is_admin(self, perm):
+    def is_admin(self):
         return self.can(Permission.ADMIN)
+
+    def ping(self):
+        self.last_seen = datetime.utcnow()
+        db.session.add(self)
+        db.session.commit()
 
     @property
     def password(self):
@@ -64,11 +74,11 @@ class User(UserMixin, db.Model):
         self.password = password
         self.confirmed = confirmed
         super().__init__(**kwargs)
-        if self.role is None:
+        if self.role_id is None:
             if self.user_email == current_app.config["ZOMBO_ADMIN"]:
-                self.role = Role.query.filter_by(name = "Admin").first()
-            if self.role is None:
-                self.role = Role.query.filter_by(default = True).first()
+                self.role_id = Role.query.filter_by(name = "Admin").first()
+            if self.role_id is None:
+                self.role_id = Role.query.filter_by(default = True).first()
 
 class AnonymousUser(AnonymousUserMixin):
     def can(self, perm):
@@ -86,7 +96,7 @@ class Role(db.Model):
     name = db.Column(db.String(64), unique=True)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer)
-    users = db.relationship("User", backref="roles", lazy="dynamic")
+    users = db.relationship("User", backref="role", lazy="dynamic")
 
     @staticmethod
     def insert_roles():
@@ -111,7 +121,7 @@ class Role(db.Model):
             if role is None:
                 # it's not so make a new one
                 role = Role(name=r)
-            role.reset_permissions()
+            role.reset_permission()
             # add whichever permissions the role needs
             for perm in roles[r]:
                 role.add_permission(perm)

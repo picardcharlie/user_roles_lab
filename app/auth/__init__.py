@@ -13,7 +13,7 @@ auth = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     signupform = SignUpForm()
     if signupform.validate_on_submit():
-        register_user = User(username=signupform.username.data, user_email=signupform.user_email.data, password=signupform.password.data, confirmed=False)
+        register_user = User(username=signupform.username.data, user_email=signupform.user_email.data, password=signupform.password.data, confirmed=False, name="", location="", bio="")
         db.session.add(register_user)
         db.session.commit()
         generate_token = register_user.generate_confirmation_token()
@@ -68,12 +68,13 @@ def before_request():
     #checks if current user is logged in
     # if they have done their confirmation email
     # blocks everything except for auth routes so they can still confirm their account
-    if current_user.is_authenticated \
-        and not current_user.confirmed \
-        and request != "static" \
-        and request.blueprint != "auth" \
-        and request.endpoint != "static":
-        return redirect(url_for("auth.unconfirmed"))
+    if current_user.is_authenticated:
+        current_user.ping()
+        if not current_user.confirmed \
+                and request != "static" \
+                and request.blueprint != "auth" \
+                and request.endpoint != "static":
+            return redirect(url_for("auth.unconfirmed"))
 
 @auth.route("/unconfirmed")
 def unconfirmed():
