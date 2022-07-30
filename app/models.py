@@ -5,6 +5,7 @@ from flask_login import UserMixin, AnonymousUserMixin
 from . import login_manager
 import jwt
 from datetime import datetime, timedelta
+import hashlib
 
 db = SQLAlchemy()
 
@@ -20,6 +21,7 @@ class User(UserMixin, db.Model):
     location = db.Column(db.String(64))
     bio = db.Column(db.Text())
     last_seen = db.Column(db.DateTime(), default = datetime.utcnow)
+    avatar_hash = db.Column(db.String(32))
 
 
     def can(self, perm):
@@ -32,6 +34,11 @@ class User(UserMixin, db.Model):
         self.last_seen = datetime.utcnow()
         db.session.add(self)
         db.session.commit()
+
+#    def admin_test():
+#        a = User(username="admin_test", user_email="123@456", password="catpoop", confirmed=True, role_id=16, name="doug", bio="yep")
+#        db.session.add(a)
+#        db.session.commit()
 
     @property
     def password(self):
@@ -68,17 +75,29 @@ class User(UserMixin, db.Model):
         # ...
         data = jwt.decode(token, current_app.secret_key, algorithms=["HS512"])
 
-    def __init__(self, username, user_email, password, confirmed, **kwargs):
+    def unicornify(self, size=96):
+        url = "https://unicornify.pictures/avatar"
+        hash = self.avatar_hash or self.email_hash()
+        return f"{url}/{hash}?s={size}"
+
+    def email_hash(self):
+        return hashlib.md5(self.user_email.lower().encode("utf-8")).hexdigest()
+
+    def __init__(self, username, user_email, password, confirmed, avatar_hash, **kwargs):
         self.username = username
         self.user_email = user_email
         self.password = password
         self.confirmed = confirmed
+
+
         super().__init__(**kwargs)
-        if self.role_id is None:
+        if self.role is None:
             if self.user_email == current_app.config["ZOMBO_ADMIN"]:
-                self.role_id = Role.query.filter_by(name = "Admin").first()
-            if self.role_id is None:
-                self.role_id = Role.query.filter_by(default = True).first()
+                self.role = Role.query.filter_by(name = "Admin").first()
+            if self.role is None:
+                self.role = Role.query.filter_by(default = True).first()
+        if self.user_email is not None and self.avatar_hash is None:
+            self.avatar_hash = self.email_hash()
 
 class AnonymousUser(AnonymousUserMixin):
     def can(self, perm):
@@ -96,7 +115,7 @@ class Role(db.Model):
     name = db.Column(db.String(64), unique=True)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer)
-    users = db.relationship("User", backref="role", lazy="dynamic")
+    users = db.relationship("User", backref="role")
 
     @staticmethod
     def insert_roles():
@@ -112,7 +131,7 @@ class Role(db.Model):
                       Permission.REVIEW,
                       Permission.PUBLISH,
                       Permission.MODERATE,
-                      Permission.ADMIN],
+                      Permission.ADMIN]
         }
         default_role = 'User'
         for r in roles:

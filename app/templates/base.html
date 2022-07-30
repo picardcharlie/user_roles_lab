@@ -1,4 +1,8 @@
 {% extends "bootstrap/base.html" %}
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+{% endblock head %}
 
 {% block scripts %}
 {{ super() }}
@@ -6,6 +10,24 @@
 {% endblock scripts %}
 
 {% block title %}{{ super() }} {% endblock title %}
+
+{% block navbar %}
+{% if current_user.is_authenticated %}
+<li class="dropdown">
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+        <img src="{{ current_user.unicornify(size=32) }}">
+        Account <b class="caret"></b>
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="{{ url_for('main.index') }}">Change Password</a></li>
+        <li><a href="{{ url_for('main.index') }}">Change Email</a></li>
+        <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+    </ul>
+</li>
+{% else %}
+<li><a href="{{ url_for('auth.login') }}">Log In</a></li>
+{% endif %}
+{% endblock navbar %}
 
 {% block content %}
 {% block page_content %}

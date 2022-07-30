@@ -8,6 +8,9 @@
 {% block page_content %}
 {{ super() }}
 <div class="page-header">
+    <img class="img-rounded profile-thumbnail" src="{{ user.unicornify() }}">
+    <div class="profile-header">
+
     <h1>{{ user.username }}</h1>
     <table class="table">
         <tbody>
@@ -24,9 +27,6 @@
             <th scope="row">Email</th>
             <td><a href="mailto:{{ user.email }}">{{ user.email }}</a></td>
             </tr>
-        {% elif current_user.can(Permission.PUBLISH) %}
-        <p> you can published </p>
-
 
         {% endif %}
         <tr>
@@ -39,5 +39,19 @@
         </tr>
         </tbody>
     </table>
+    </div>
+
 </div>
-{% endblock %}
+<div class="page-header">
+    {% if user == current_user %}
+    <a class="btn btn-default" href="{{ url_for('.edit_profile') }}">
+        Edit Profile
+    </a>
+    {% endif %}
+    {% if current_user.is_admin() %}
+    <a class="btn btn-danger" href="{{ url_for('.admin_edit_profile', id=user.id) }}">
+        edit as admin
+    </a>
+    {% endif %}
+</div>
+{% endblock page_content %}

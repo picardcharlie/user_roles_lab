@@ -13,7 +13,7 @@ auth = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     signupform = SignUpForm()
     if signupform.validate_on_submit():
-        register_user = User(username=signupform.username.data, user_email=signupform.user_email.data, password=signupform.password.data, confirmed=False, name="", location="", bio="")
+        register_user = User(username=signupform.username.data, user_email=signupform.user_email.data, password=signupform.password.data, confirmed=False, name="", location="", bio="", avatar_hash=None)
         db.session.add(register_user)
         db.session.commit()
         generate_token = register_user.generate_confirmation_token()
