@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, EmailField, TextAreaField, SelectField
 from wtforms.validators import DataRequired, Length, Regexp, EqualTo, ValidationError
-from app.models import db, User
+from app.models import db, User, Composition, PostType
 
 class SignUpForm(FlaskForm):
     username = StringField("Username", validators= [DataRequired(), Length(3, 64), Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0, "username can only contain letters, numbers, dots, underscores")])
@@ -41,10 +41,12 @@ class AdminLevelEditProfileForm(FlaskForm):
     bio = TextAreaField("bio")
     submit = SubmitField("submit changes")
 
-    def validate_username(self, field):
-        if User.query.filter_by(username=field.data).first():
-            raise ValidationError("username already in use")
+class CompositionForm(FlaskForm):
+    post_type = SelectField("post type", coerce=int, default=PostType.RANT, validators=[DataRequired()])
+    title = StringField("title", validators=[DataRequired()])
+    description = TextAreaField("text area")
+    submit = SubmitField("submit")
 
-    def validate_user_email(self, field):
-        if User.query.filter_by(user_email=field.data).first():
-            raise ValidationError("email already in use")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.post_type.choices = [(PostType.THOUGHT, "thought"), (PostType.IDEA, "idea"), (PostType.RANT, "rant")]

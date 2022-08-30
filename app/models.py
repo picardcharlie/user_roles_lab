@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     bio = db.Column(db.Text())
     last_seen = db.Column(db.DateTime(), default = datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
+    compositions = db.relationship("Composition", backref="poster", lazy="dynamic")
 
 
     def can(self, perm):
@@ -36,7 +37,7 @@ class User(UserMixin, db.Model):
         db.session.commit()
 
 #    def admin_test():
-#        a = User(username="admin_test", user_email="123@456", password="catpoop", confirmed=True, role_id=16, name="doug", bio="yep")
+#        a = User(username="admin_test", user_email="123@456", password="catpoop", confirmed=True, role_id=3, name="doug", bio="yep")
 #        db.session.add(a)
 #        db.session.commit()
 
@@ -98,6 +99,23 @@ class User(UserMixin, db.Model):
                 self.role = Role.query.filter_by(default = True).first()
         if self.user_email is not None and self.avatar_hash is None:
             self.avatar_hash = self.email_hash()
+
+
+class Composition(db.Model):
+    __tablename__ = "compositions"
+    id = db.Column(db.Integer, primary_key=True)
+    post_type = db.Column(db.Integer)
+    title = db.Column(db.String(64))
+    description = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    poster_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+
+class PostType:
+    THOUGHT = 1
+    IDEA = 2
+    RANT = 3
+
 
 class AnonymousUser(AnonymousUserMixin):
     def can(self, perm):
