@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
-from ..models import db, User, Permission, Composition
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from ..models import db, User, Permission, Composition, PostType
 from app.forms import EditProfileForm, AdminLevelEditProfileForm, CompositionForm
 from flask_login import current_user, login_required
 from ..decorators import admin_required, permission_required
@@ -8,7 +8,7 @@ main = Blueprint('main', __name__)
 
 @main.app_context_processor
 def inject_permissions():
-    return dict(Permission=Permission)
+    return dict(Permission=Permission, PostType=PostType)
 
 
 @main.route('/', methods=['GET', 'POST'])
@@ -19,8 +19,10 @@ def index():
         db.session.add(composition)
         db.session.commit()
         return redirect(url_for('.index'))
-    compositions = Composition.query.order_by(Composition.timestamp.desc()).all()
-    return render_template('index.html', form=form, compositions=compositions)
+    page = request.args.get("page", 1, type=int)
+    pagination = Composition.query.order_by(Composition.timestamp.desc()).paginate(page, per_page=current_app.config["ZOMBO_COMP_PER_PAGE"], error_out=False)
+    compositions = pagination.items
+    return render_template('index.html', form=form, compositions=compositions, pagination=pagination)
 
 
 @main.route("/user/<username>")

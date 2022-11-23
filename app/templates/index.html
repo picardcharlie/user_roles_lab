@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
 
 {% block page_content %}
 <h1>WELCOME TO ZOMBO.COM</h1>
@@ -14,6 +15,33 @@
 <p><a href={{ url_for("auth.register") }}>register</a></p>
 
 <p>{{ wtf.quick_form(form) }}</p>
+
+
+<ul class="compositions"> {# All compositions #}
+    {% for composition in compositions %}
+    <li class="composition">
+
+        <div class="composition-thumbnail">
+            <a href="{{ url_for('.user', username=composition.poster.username) }}">
+                <img class="img-rounded profile-thumbnail" src="{{ composition.poster.unicornify(size=64) }}">
+            </a>
+        </div>
+        <div class="composition-content">
+            <div class="composition-poster">posted by: <a href="{{ url_for('.user', username=composition.poster.username) }}">{{ composition.poster.username}}</a></div>
+            <div class="composition-title">{{ composition.title }}</div>
+            <div class="composition-release-type">post type: {% if composition.post_type == PostType.THOUGHT %}thought{% elif composition.post_type == PostType.IDEA %}idea{% elif composition.post_type == PostType.RANT %}rant{% endif %}</div>
+            {{ composition.description }}
+            <div class="composition-date">{{ moment(composition.timestamp).fromNow() }}</div>
+            {# ... #}
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+
+{% if pagination %}
+    <div class="pagination">{{ macros.pagination_widget(pagination, ".index") }}</div>
+{% endif %}
+
 
 <p>{{ compositions|length }}</p>
 {% endblock page_content %}
