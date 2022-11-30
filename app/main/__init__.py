@@ -28,7 +28,8 @@ def index():
 @main.route("/user/<username>")
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template("user.html", user=user)
+    compositions = Composition.query.filter_by(userid=username.id).order_by(Composition.timestamp.desc())
+    return render_template("user.html", user=user, compositions=compositions)
 
 
 @main.route("/editprofile", methods=["GET", "POST"])

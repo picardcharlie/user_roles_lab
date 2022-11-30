@@ -6,6 +6,8 @@ from . import login_manager
 import jwt
 from datetime import datetime, timedelta
 import hashlib
+import bleach
+import re
 
 db = SQLAlchemy()
 
@@ -107,8 +109,18 @@ class Composition(db.Model):
     post_type = db.Column(db.Integer)
     title = db.Column(db.String(64))
     description = db.Column(db.Text)
+    description_html = db.Column(db.Text)
+    slug = db.Column(db.String(128), unique=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     poster_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    @staticmethod
+    def on_changed_description(target, value, oldvalue, initiator):
+        allowed_tags = ["a"]
+        html = bleach.linkify(bleach.clean(value, tags=allowed_tags, strip=True))
+        target.desciption_html = html
+
+db.event.listen(Composition.description, "set", Composition.on_changed_description)
 
 
 class PostType:
