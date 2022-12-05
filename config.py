@@ -20,7 +20,7 @@ class Config():
     ZOMBO_MAIL_SUBJECT_PREFIX = "ZOMBO - "
     ZOMBO_MAIL_SENDER = f"ZOMBO admin {ZOMBO_ADMIN}"
 
-    ZOMBO_COMP_PER_PAGE = 10
+    ZOMBO_COMP_PER_PAGE = 5
 
     @staticmethod
     def init_app(app):

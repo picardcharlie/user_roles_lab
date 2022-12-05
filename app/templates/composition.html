@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block navbar %}
+{{ super() }}
+{% endblock navbar %}
+
+{% block page_content %}
+{{ super() }}
+
+{% include "_compositions.html" %}
+
+{% endblock page_content %}

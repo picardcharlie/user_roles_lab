@@ -18,6 +18,7 @@ def index():
         composition = Composition(post_type=form.post_type.data, title=form.title.data, description=form.description.data, poster=current_user._get_current_object())
         db.session.add(composition)
         db.session.commit()
+        composition.generate_slug()
         return redirect(url_for('.index'))
     page = request.args.get("page", 1, type=int)
     pagination = Composition.query.order_by(Composition.timestamp.desc()).paginate(page, per_page=current_app.config["ZOMBO_COMP_PER_PAGE"], error_out=False)
@@ -28,8 +29,16 @@ def index():
 @main.route("/user/<username>")
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    compositions = Composition.query.filter_by(userid=username.id).order_by(Composition.timestamp.desc())
-    return render_template("user.html", user=user, compositions=compositions)
+    page = request.args.get("page", 1, type=int)
+    pagination = Composition.query.filter_by(poster_id=user.id).order_by(Composition.timestamp.desc()).paginate(page, per_page=current_app.config["ZOMBO_COMP_PER_PAGE"], error_out=False)
+    compositions = pagination.items
+    return render_template("user.html", user=user, compositions=compositions, pagination=pagination)
+
+
+@main.route("/composition/<slug>")
+def composition(slug):
+    composition = Composition.query.filter_by(slug=slug).first_or_404()
+    return render_template("composition.html", compositions=[composition])
 
 
 @main.route("/editprofile", methods=["GET", "POST"])

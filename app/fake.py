@@ -39,3 +39,5 @@ def compositions(count=50):
                         poster_id=u.id)
         db.session.add(c)
     db.session.commit()
+    for c in Composition.query.all():
+        c.generate_slug()

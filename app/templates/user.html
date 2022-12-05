@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
 {% block title %} {{ super() }} User {{user_name}} {% endblock title %}
 
 {% block navbar %}
@@ -57,4 +59,9 @@
 
 <h3>compositions by: {{ user.username }}</h3>
 {% include "_compositions.html" %}
+
+{% if pagination %}
+    <div class="pagination">{{ macros.pagination_widget(pagination, url_for(".user", username=user.username)) }}</div>
+{% endif %}
+
 {% endblock page_content %}

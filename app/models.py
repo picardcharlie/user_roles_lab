@@ -120,6 +120,11 @@ class Composition(db.Model):
         html = bleach.linkify(bleach.clean(value, tags=allowed_tags, strip=True))
         target.desciption_html = html
 
+    def generate_slug(self):
+        self.slug = f"{self.id}-" + re.sub(r'[^\w]+', '-', self.title.lower())
+        db.session.add(self)
+        db.session.commit()
+
 db.event.listen(Composition.description, "set", Composition.on_changed_description)
 
 
