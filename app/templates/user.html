@@ -42,8 +42,15 @@
         </tbody>
     </table>
     </div>
-
 </div>
+
+<div>
+    <h2><a class="follow" href="{{ url_for('.follow', username=user.username) }}">follow</a></h2>
+    {% for msg in get_flashed_messages() %}
+        <p>{{ msg }}</p>
+    {% endfor %}
+</div>
+
 <div class="page-header">
     {% if user == current_user %}
     <a class="btn btn-default" href="{{ url_for('.edit_profile') }}">
@@ -61,7 +68,7 @@
 {% include "_compositions.html" %}
 
 {% if pagination %}
-    <div class="pagination">{{ macros.pagination_widget(pagination, url_for(".user", username=user.username)) }}</div>
+    <div class="pagination">{{ macros.pagination_widget(pagination, ".user", username=user.username) }}</div>
 {% endif %}
 
 {% endblock page_content %}

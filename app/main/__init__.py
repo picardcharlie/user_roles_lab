@@ -41,6 +41,60 @@ def composition(slug):
     return render_template("composition.html", compositions=[composition])
 
 
+@main.route("/follow/<username>")
+@login_required
+@permission_required(Permission.FOLLOW)
+def follow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash("that ain't a user here.")
+        return redirect(url_for(".index"))
+    if current_user.is_following(user):
+        flash("u r already following dem.")
+        return redirect(url_for(".user", username=username))
+    current_user.follow(user)
+    db.session.commit()
+    flash(f"you are now following {username}.")
+    return redirect(url_for(".user", username=username))
+
+@main.route("/unfollow/<username>")
+@login_required
+@permission_required(Permission.FOLLOW)
+def unfollow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash("that ain't a user here.")
+        return redirect(url_for(".index"))
+    if current_user.is_a_follower(user) is None:
+        flash("u r not following dem.")
+        return redirect(url_for(".user", username=username))
+    current_user.un_follow(user)
+    db.session.commit()
+    flash(f"you are not following {username} now.")
+    return redirect(url_for(".user", username=username))
+
+@main.route("/followers/<username>")
+def followers(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash("invalid user.")
+        return redirect(url_for(".index"))
+    page = request.args.get("page", 1, type=int)
+    pagination = user.followers.paginate(page, per_page=current_app.config["ZOMBO_FOLLOWERS_PER_PAGE"], error_out=False)
+    follows = [{"user": item.follower, "timestamp": item.timestamp} for item in pagination.items]
+    return render_template("followers.html", user=user, title_text="Followers of", endpoint=".followers", pagination=pagination, follows=follows)
+
+@main.route("/following/<username>")
+def following(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash("invalid user.")
+        return redirect(url_for(".index"))
+    page = request.args.get("page", 1, type=int)
+    pagination = user.following.paginate(page, per_page=current_app.config["ZOMBO_FOLLOWERS_PER_PAGE"], error_out=False)
+    follows = [{"user": item.follower, "timestamp": item.timestamp}for item in pagination.items]
+
+
 @main.route("/editprofile", methods=["GET", "POST"])
 @login_required
 def edit_profile():
