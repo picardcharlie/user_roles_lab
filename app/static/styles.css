@@ -43,3 +43,12 @@ div.composition-content {
     margin-left: 72px;
     min-height: 72px;
 }
+
+.button {
+    background-color: indianred;
+    border: 1px solid brown;
+    border-radius: 3px;
+    color: navajowhite;
+    text-align: center;
+    padding: 12px 18px;
+    }

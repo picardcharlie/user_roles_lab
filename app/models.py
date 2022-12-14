@@ -31,7 +31,7 @@ class Role(db.Model):
     name = db.Column(db.String(64), unique=True)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer)
-    users = db.relationship("User", backref="role")
+    users = db.relationship("User", backref="role", lazy="dynamic")
 
     @staticmethod
     def insert_roles():
@@ -129,7 +129,7 @@ class User(UserMixin, db.Model):
         db.session.commit()
 
     def admin_test():
-        a = User(username="admin_test", user_email="123@456", password="catpoop", confirmed=True, role_id=3, name="doug", bio="yep", avatar_hash=None)
+        a = User(username="admin_test", user_email="123@456", password="catpoop", confirmed=True, role_id=None, name="doug", bio="yep", avatar_hash=None)
         db.session.add(a)
         db.session.commit()
 

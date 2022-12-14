@@ -14,6 +14,28 @@
     <div class="profile-header">
 
     <h1>{{ user.username }}</h1>
+        <div class="follow">
+            <div class="follow_button">
+                {% if current_user.can(Permission.FOLLOW) and current_user != user %}
+                {% if not current_user.is_following(user) %}
+                <a class="button" href="{{ url_for('.follow', username=user.username) }}">follow</a>
+                {% else %}
+                <a class="button" href="{{ url_for('.unfollow', username=user.username) }}">unfollow</a>
+                {% endif %}
+                {% endif %}
+                {% if user.is_following(current_user) %}
+                <span class="label label-default">Following you</span>
+                {% endif %}
+
+                {% for msg in get_flashed_messages() %}
+                <p>{{ msg }}</p>
+                {% endfor %}
+                followers: {{ user.followers.count() }}
+                following: {{ user.following.count() }}
+            </div>
+        </div>
+
+
     <table class="table">
         <tbody>
         <tr>
@@ -44,12 +66,6 @@
     </div>
 </div>
 
-<div>
-    <h2><a class="follow" href="{{ url_for('.follow', username=user.username) }}">follow</a></h2>
-    {% for msg in get_flashed_messages() %}
-        <p>{{ msg }}</p>
-    {% endfor %}
-</div>
 
 <div class="page-header">
     {% if user == current_user %}
